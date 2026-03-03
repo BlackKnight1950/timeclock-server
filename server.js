@@ -8,7 +8,7 @@ app.use(express.static('public')); // serves the app to staff
 
 // ── Smartsheet config ─────────────────────────────────────────────
 const SHEET_ID = '5334378914729860';
-const TOKEN    = '4XVmJfCIU0ya0GUx5UxjKT1EXm5FrTP9krR';
+const TOKEN    = 'rMj42oOXQa4wv9RrIYH0RMqvwBRS0CMeX06o6';
 const COL = {
   firstName : 3305598282846084,
   lastName  : 7809197910216580,
@@ -41,10 +41,12 @@ app.post('/api/clockin', async (req, res) => {
         { columnId: COL.timestamp, value: clockIn    },
       ]
     }]);
+    console.log('Smartsheet clockin response:', JSON.stringify(data));
     const rowId = data.result?.[0]?.id;
-    if (!rowId) throw new Error('No row ID from Smartsheet');
+    if (!rowId) throw new Error(data.message || data.errorCode || 'No row ID from Smartsheet');
     res.json({ success: true, rowId });
   } catch (e) {
+    console.error('Clockin error:', e.message);
     res.status(500).json({ success: false, error: e.message });
   }
 });
