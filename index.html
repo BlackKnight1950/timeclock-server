@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0f1e">
+<title>Staff Time Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0a0f1e;--card:#1a2535;--teal:#00d4aa;--tg:rgba(0,212,170,.12);--tb:rgba(0,212,170,.28);--red:#ff4d6d;--rb:rgba(255,77,109,.28);--white:#eef2f7;--gray:#7a8fa6;--bdr:rgba(255,255,255,.07)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100dvh;display:flex;justify-content:center;background-image:linear-gradient(rgba(0,212,170,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.025) 1px,transparent 1px);background-size:48px 48px}
+.app{width:100%;max-width:460px;display:flex;flex-direction:column;padding-bottom:56px}
+.hdr{padding:52px 28px 22px;position:sticky;top:0;z-index:20;background:rgba(10,15,30,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr)}
+.hdr-eye{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 7px var(--teal);animation:pulse 2.5s ease-in-out infinite}
+.hdr-eye span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal)}
+.hdr-title{font-size:28px;font-weight:800;letter-spacing:-.03em}
+.hdr-title em{font-style:normal;color:var(--teal)}
+.clk{margin:24px 28px 0;padding:18px 22px;background:var(--card);border:1px solid var(--bdr);border-radius:14px;display:flex;align-items:center;justify-content:space-between}
+.clk-time{font-family:'DM Mono',monospace;font-size:32px;font-weight:500}
+.clk-time .s{color:var(--teal)}
+.clk-r{text-align:right}
+.clk-day{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--teal)}
+.clk-date{font-size:12px;color:var(--gray);margin-top:3px}
+.sl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);margin-bottom:14px}
+.form{padding:26px 28px 0}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);margin-bottom:8px}
+.fld input{width:100%;background:var(--card);border:1.5px solid var(--bdr);border-radius:13px;padding:17px 20px;font-family:'DM Sans',sans-serif;font-size:17px;color:var(--white);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+.fld input::placeholder{color:rgba(122,143,166,.45)}
+.fld input:focus{border-color:var(--tb);box-shadow:0 0 0 4px var(--tg)}
+.fld input.v{border-color:rgba(0,212,170,.22)}
+.badge{margin:4px 28px 0;padding:15px 18px;background:var(--tg);border:1px solid var(--tb);border-radius:13px;display:flex;align-items:center;gap:13px;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none}
+.badge.show{opacity:1;transform:translateY(0)}
+.badge-av{width:40px;height:40px;border-radius:50%;background:rgba(0,212,170,.18);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--teal);flex-shrink:0}
+.badge-name{font-size:17px;font-weight:700}
+.badge-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.stat{padding:20px 28px 0}
+.stat-card{padding:15px 20px;background:var(--card);border:1px solid var(--bdr);border-radius:13px;display:flex;align-items:center;gap:12px;min-height:54px}
+.pip{width:9px;height:9px;border-radius:50%;background:var(--gray);flex-shrink:0;transition:background .3s,box-shadow .3s}
+.pip.on{background:var(--teal);box-shadow:0 0 10px var(--teal);animation:pulse 2s ease-in-out infinite}
+.stat-txt{font-size:13.5px;color:var(--gray);flex:1}
+.stat-txt strong{color:var(--white)}
+.stat-since{font-family:'DM Mono',monospace;font-size:12px;color:var(--teal);flex-shrink:0}
+.acts{padding:22px 28px 0;display:flex;flex-direction:column;gap:13px}
+.btn{width:100%;padding:20px 24px;border-radius:14px;border:none;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:11px;-webkit-appearance:none}
+.btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.btn:not(:disabled):active{transform:scale(.97)}
+.btn-in{background:var(--teal);color:var(--navy);box-shadow:0 4px 28px rgba(0,212,170,.3)}
+.btn-out{background:var(--red);color:#fff;box-shadow:0 4px 28px rgba(255,77,109,.25)}
+.spin{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(0,0,0,.15);border-top-color:rgba(0,0,0,.6);animation:spin .65s linear infinite;display:none}
+.btn-out .spin{border-color:rgba(255,255,255,.2);border-top-color:rgba(255,255,255,.85)}
+.btn.ld .spin{display:block}
+.btn.ld .bl,.btn.ld svg{display:none}
+.divider{height:1px;background:var(--bdr);margin:26px 28px 0}
+.log{padding:26px 28px 0}
+.li{padding:13px 16px;background:var(--card);border:1px solid var(--bdr);border-radius:11px;display:flex;align-items:center;gap:11px;margin-bottom:9px;animation:si .25s ease}
+.lb{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:5px;flex-shrink:0}
+.lb.in{background:rgba(0,212,170,.12);color:var(--teal);border:1px solid var(--tb)}
+.lb.out{background:rgba(255,77,109,.12);color:var(--red);border:1px solid var(--rb)}
+.ln{font-size:13px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt{font-family:'DM Mono',monospace;font-size:11px;color:var(--gray);flex-shrink:0}
+.empty{font-size:13px;color:var(--gray);text-align:center;padding:22px;font-style:italic}
+.footer{margin-top:28px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:rgba(122,143,166,.28);letter-spacing:.1em}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--card);border-radius:14px;padding:15px 22px;display:flex;align-items:center;gap:11px;font-size:14px;font-weight:500;color:var(--white);z-index:999;white-space:nowrap;max-width:calc(100vw - 40px);box-shadow:0 12px 48px rgba(0,0,0,.55);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.success{border:1px solid var(--tb)}
+#toast.error{border:1px solid var(--rb)}
+#toast.info{border:1px solid rgba(122,143,166,.3)}
+.tp{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#toast.success .tp{background:var(--teal)}
+#toast.error .tp{background:var(--red)}
+#toast.info .tp{background:var(--gray)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes si{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-eye"><div class="dot"></div><span>Staff Management System</span></div>
+    <div class="hdr-title">Time <em>Clock</em></div>
+  </div>
+  <div class="clk">
+    <div class="clk-time"><span id="hm">--:--</span><span class="s" id="sc">:--</span></div>
+    <div class="clk-r"><div class="clk-day" id="dn">---</div><div class="clk-date" id="ds">---</div></div>
+  </div>
+  <div class="form">
+    <div class="sl">Staff Identification</div>
+    <div class="fld"><label>Last Name</label><input type="text" id="ln" placeholder="Enter last name" autocomplete="family-name" autocorrect="off" spellcheck="false"></div>
+    <div class="fld"><label>First Name</label><input type="text" id="fn" placeholder="Enter first name" autocomplete="given-name" autocorrect="off" spellcheck="false"></div>
+  </div>
+  <div class="badge" id="badge">
+    <div class="badge-av" id="av">--</div>
+    <div><div class="badge-name" id="bn"></div><div class="badge-sub" id="bs">Ready to clock in</div></div>
+  </div>
+  <div class="stat">
+    <div class="sl">Current Status</div>
+    <div class="stat-card">
+      <div class="pip" id="pip"></div>
+      <div class="stat-txt" id="st">Enter your name to begin</div>
+      <div class="stat-since" id="ss"></div>
+    </div>
+  </div>
+  <div class="acts">
+    <button class="btn btn-in" id="bi" disabled onclick="go('in')">
+      <div class="spin"></div>
+      <svg class="bl" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      <span class="bl">Clock In</span>
+    </button>
+    <button class="btn btn-out" id="bo" disabled onclick="go('out')">
+      <div class="spin"></div>
+      <svg class="bl" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span class="bl">Clock Out</span>
+    </button>
+  </div>
+  <div class="divider"></div>
+  <div class="log">
+    <div class="sl">Session Log</div>
+    <div id="ll"><div class="empty">No entries this session</div></div>
+  </div>
+  <div class="footer">TIME TRACKER · SMARTSHEET CONNECTED</div>
+</div>
+<div id="toast"><div class="tp"></div><span id="tm"></span></div>
+<script>
+const pad=n=>String(n).padStart(2,'0');
+const fmtDT=d=>`${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const fmtISO=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fmtDisp=d=>{const h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';return `${h%12||12}:${pad(m)} ${a}`};
+const fmtSh=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+let ses={},logs=[];
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function tick(){
+  const n=new Date();
+  document.getElementById('hm').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  document.getElementById('sc').textContent=`:${pad(n.getSeconds())}`;
+  document.getElementById('dn').textContent=DAYS[n.getDay()];
+  document.getElementById('ds').textContent=`${MON[n.getMonth()]} ${n.getDate()}, ${n.getFullYear()}`;
+}
+tick();setInterval(tick,1000);
+document.getElementById('ln').addEventListener('input',ui);
+document.getElementById('fn').addEventListener('input',ui);
+function ui(){
+  const l=document.getElementById('ln').value.trim();
+  const f=document.getElementById('fn').value.trim();
+  const rdy=l.length>0&&f.length>0,k=`${l},${f}`,clkd=rdy&&!!ses[k];
+  document.getElementById('ln').classList.toggle('v',l.length>0);
+  document.getElementById('fn').classList.toggle('v',f.length>0);
+  if(rdy){
+    document.getElementById('badge').classList.add('show');
+    document.getElementById('av').textContent=(f[0]+l[0]).toUpperCase();
+    document.getElementById('bn').textContent=`${f} ${l}`;
+    document.getElementById('bs').textContent=clkd?'Currently clocked in':'Ready to clock in';
+    document.getElementById('bi').disabled=clkd;
+    document.getElementById('bo').disabled=!clkd;
+    document.getElementById('pip').className='pip'+(clkd?' on':'');
+    document.getElementById('st').innerHTML=clkd?`<strong>${f} ${l}</strong> is clocked IN`:`<strong>${f} ${l}</strong> \u2014 not clocked in`;
+    document.getElementById('ss').textContent=clkd?(ses[k]?.since||''):'';
+  }else{
+    document.getElementById('badge').classList.remove('show');
+    document.getElementById('bi').disabled=true;
+    document.getElementById('bo').disabled=true;
+    document.getElementById('pip').className='pip';
+    document.getElementById('st').textContent='Enter your name to begin';
+    document.getElementById('ss').textContent='';
+  }
+}
+async function go(type){
+  const l=document.getElementById('ln').value.trim(),f=document.getElementById('fn').value.trim();
+  if(!l||!f)return;
+  const k=`${l},${f}`,now=new Date();
+  const btn=document.getElementById(type==='in'?'bi':'bo');
+  btn.classList.add('ld');
+  document.getElementById('bi').disabled=true;
+  document.getElementById('bo').disabled=true;
+  toast('Saving to Smartsheet\u2026','info');
+  try{
+    if(type==='in'){
+      const r=await fetch('/api/clockin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:f,lastName:l,clockIn:fmtDT(now),date:fmtISO(now)})});
+      const d=await r.json();
+      if(!d.success)throw new Error(d.error||'Server error');
+      ses[k]={rowId:d.rowId,since:fmtSh(now)};
+      addLog(f,l,'in',now);
+      toast(`\u2713 Clocked IN at ${fmtDisp(now)}`,'success');
+    }else{
+      const r=await fetch('/api/clockout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rowId:ses[k]?.rowId,firstName:f,lastName:l,clockOut:fmtDT(now)})});
+      const d=await r.json();
+      if(!d.success)throw new Error(d.error||'Server error');
+      delete ses[k];
+      addLog(f,l,'out',now);
+      toast(`\u2713 Clocked OUT at ${fmtDisp(now)}`,'success');
+    }
+  }catch(e){
+    if(type==='in')delete ses[k];
+    toast('Error \u2014 '+e.message,'error');
+  }
+  btn.classList.remove('ld');ui();
+}
+function addLog(f,l,t,d){
+  logs.unshift({f,l,t,ts:fmtDisp(d)});
+  document.getElementById('ll').innerHTML=logs.slice(0,12).map(e=>`<div class="li"><span class="lb ${e.t}">${e.t==='in'?'IN':'OUT'}</span><span class="ln">${e.f} ${e.l}</span><span class="lt">${e.ts}</span></div>`).join('');
+}
+let _t;
+function toast(msg,type){
+  const el=document.getElementById('toast');
+  document.getElementById('tm').textContent=msg;
+  el.className=`show ${type}`;
+  clearTimeout(_t);
+  _t=setTimeout(()=>el.classList.remove('show'),4500);
+}
+</script>
+</body>
+</html>
